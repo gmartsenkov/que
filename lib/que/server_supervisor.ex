@@ -44,11 +44,16 @@ defmodule Que.ServerSupervisor do
   # If not, spawn a new server first and then add it.
   @doc false
   def add(worker, args) do
-    unless Que.Server.exists?(worker) do
-      start_server(worker)
-    end
+    case Application.fetch_env(:que, :execute_immediately) do
+      {:ok, true} ->
+	worker.perform(args)
+      _ ->
+	unless Que.Server.exists?(worker) do
+	  start_server(worker)
+	end
 
-    Que.Server.add(worker, args)
+	Que.Server.add(worker, args)
+    end
   end
 
 
